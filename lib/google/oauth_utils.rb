@@ -15,7 +15,7 @@
 
 require 'google/api_client'
 require 'google/api_client/client_secrets'
-require './credentials_store'
+require_relative 'credentials_store'
 
 # These utility functions are an example of how Ruby code can use the
 # Google::APIClient class to authorize access to an application using OAuth2.
@@ -74,7 +74,7 @@ end
 #   OAuth 2.0 credentials.
 def client_secrets
   Google::APIClient::ClientSecrets.load(
-    'client_secrets.json').to_authorization
+    'config/client_secrets.json').to_authorization
 end
 
 ##

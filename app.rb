@@ -14,7 +14,7 @@
 
 
 require 'sinatra/base'
-require './mirror_client'
+require './lib/google/mirror_client'
 
 ##
 # Contains the behavior of the Sinatra Quick Start application.
