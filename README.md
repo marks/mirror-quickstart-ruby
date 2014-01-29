@@ -19,4 +19,6 @@ Mark's Modifications
 
 Mark's To Do
 ---
-- Be able to delete timeline cards created from this quickstart from the device8
+- ~~Be able to delete timeline cards created from this quickstart from the device~~
+  - just had to add `menuItems: [{ action: 'DELETE' }]` to timeline item
+- Record responses to cards in database (right now they are just inserted into the timeline)

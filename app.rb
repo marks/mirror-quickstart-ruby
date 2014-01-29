@@ -109,7 +109,13 @@ class MirrorQuickStart < Sinatra::Base
   # the timeline.
   post '/insert-item' do
     @mirror.insert_timeline_item(
-      { text: params[:message] },
+      {
+        text: params[:message],
+        menuItems: [
+          { action: 'DELETE' },
+        ]
+
+      },
       "#{settings.public_folder}/#{params[:imageUrl]}",
       params[:contentType])
 
@@ -134,7 +140,8 @@ class MirrorQuickStart < Sinatra::Base
           values: [{
             displayName: 'Drill Into',
             iconUrl: "#{base_url}/images/drill.png"
-          }] }
+          }] },
+        { action: 'DELETE' },
       ]
     })
 
