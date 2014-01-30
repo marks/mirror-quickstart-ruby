@@ -18,7 +18,10 @@
 require 'bundler'
 Bundler.require
 require "sinatra/config_file"
-config_file './config/app.yml'
+config_file './config/app.erb.yml'
+
+require 'pp'
+pp settings.google_oauth
 
 require './lib/google/mirror_client'
 require './lib/models'
@@ -275,7 +278,7 @@ get '/oauth2callback' do
 
     redirect to '/'
   elsif session[:user_id].nil? ||
-      get_stored_credentials(session[:user_id]).nil?
+    get_stored_credentials(session[:user_id]).nil?
     # Handle step 1 of the OAuth 2.0 dance - redirect to Google
     redirect to get_authorization_url(nil, nil)
   else

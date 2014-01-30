@@ -1,6 +1,5 @@
 development: &common_settings
   debug_mode: true 
-  path_to_client_secrets: config/client_secrets.json
   google_oauth:
     client_secret: <%= ENV['GOOGLE_OAUTH_CLIENT_SECRET'] %>
     client_email: <%= ENV['GOOGLE_OAUTH_CLIENT_EMAIL'] %>
