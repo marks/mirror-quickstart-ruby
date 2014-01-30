@@ -311,8 +311,8 @@ post '/notify-callback' do
         @mirror.patch_timeline_item(timeline_item_id,
           { text: "Ruby Quick Start got your photo! #{caption}" })
       else
-        @mirror.patch_timeline_item(timeline_item_id,
-          { text: "Got it... #{params.inspect}" })
+        @mirror.insert_timeline_item(
+          { text: "Server received the following: #{timeline_item.inspect}" })
       end
     end
   when 'locations'
