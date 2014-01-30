@@ -18,3 +18,5 @@ config/client_secrets.json
 .idea/workspace.xml
 
 db/dev.db
+
+.env
