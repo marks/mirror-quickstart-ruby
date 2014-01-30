@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# require 'sinatra/base'
-
 require 'bundler'
 Bundler.require
 require "sinatra/config_file"
 config_file './config/app.erb.yml'
-
-require 'pp'
-pp settings.google_oauth
 
 require './lib/google/mirror_client'
 require './lib/models'
@@ -335,6 +329,7 @@ post '/notify-callback' do
     puts "I don't know how to process this notification: " +
       "#{params[:collection]}"
   end
+  return ""
 end
 
 ##
