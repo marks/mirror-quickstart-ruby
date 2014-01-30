@@ -16,3 +16,5 @@ config/client_secrets.json
 .idea/scopes/scope_settings.xml
 
 .idea/workspace.xml
+
+db/dev.db
