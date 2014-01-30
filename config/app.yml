@@ -1,8 +1,15 @@
-
 development: &common_settings
   debug_mode: true 
   path_to_client_secrets: config/client_secrets.json
+  google_oauth:
+    client_secret: <%= ENV['GOOGLE_OAUTH_CLIENT_SECRET'] %>
+    client_email: <%= ENV['GOOGLE_OAUTH_CLIENT_EMAIL'] %>
+    redirect_uris:
+      - <%= ENV['GOOGLE_OAUTH_REDIRECT_URI'] %>
+    client_x509_cert_url: <%= ENV['GOOGLE_OAUTH_CLIENT_X509_CERT_URL'] %>
+    client_id: <%= ENV['GOOGLE_OAUTH_CLIENT_ID'] %>
+    javascript_origins:
+      - <%= ENV['GOOGLE_OAUTH_JAVASCRIPT_ORIGIN'] %>
 
 production:
   <<: *common_settings
-  # debug_mode: false

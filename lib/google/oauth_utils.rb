@@ -67,8 +67,20 @@ end
 # @return [Signet::OAuth2::Client]
 #   OAuth 2.0 credentials.
 def client_secrets
-  Google::APIClient::ClientSecrets.load(
-    settings.path_to_client_secrets).to_authorization
+  Google::APIClient::ClientSecrets.new({
+    "web"=> {
+      "auth_uri"=>"https://accounts.google.com/o/oauth2/auth",
+      "token_uri"=>"https://accounts.google.com/o/oauth2/token",
+      "auth_provider_x509_cert_url"=>"https://www.googleapis.com/oauth2/v1/certs",
+      "client_secret" => settings.google_oauth["client_secret"],
+      "client_email" => settings.google_oauth["client_email"],
+      "redirect_uris" => settings.google_oauth["redirect_uris"],
+      "client_x509_cert_url" => settings.google_oauth["client_x509_cert_url"],
+      "client_id"=> settings.google_oauth["client_id"], 
+      "javascript_origins"=> settings.google_oauth["javascript_origins"]
+    }
+  }).to_authorization
+
 end
 
 ##
