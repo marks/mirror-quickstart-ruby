@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-require 'yaml'
-require 'sqlite3'
-
 # The functions in this file are called by those in oauth_utils.rb. This
 # separates the OAuth2 portion of the code from the app-specific portion
 # that decides where and how user credentials should be stored. This
@@ -26,22 +22,6 @@ require 'sqlite3'
 
 
 ##
-# Initializes the credentials store.
-#
-# @return [SQLite3::Database]
-#   The SQLite3 database.
-def init_credentials_store
-  db = SQLite3::Database.new('credentials.sqlite3')
-  test = "select count(*) from sqlite_master where name = 'credentials'"
-  if db.get_first_value(test) == 0
-    create = "create table credentials (userid text not null unique, " +
-      "credentials text not null);"
-    db.execute create
-  end
-  db
-end
-
-##
 # Retrieved stored credentials for the provided user ID.
 #
 # @param [String] user_id
@@ -49,12 +29,9 @@ end
 # @return [Signet::OAuth2::Client]
 #   Stored OAuth 2.0 credentials if found, nil otherwise.
 def get_stored_credentials(user_id)
-  db = init_credentials_store
-  row = db.get_first_row('select credentials from credentials " +
-    "where userid = ?', user_id)
-  if row
-    hash = YAML::load(row[0])
-    Signet::OAuth2::Client.new(hash)
+  c = Credentials.first(:user_id => user_id)
+  if c
+    Signet::OAuth2::Client.new({:access_token => c.access_token, :refresh_token => c.refresh_token})
   else
     nil
   end
@@ -67,8 +44,7 @@ end
 # @return [Array]
 #   An array containing user IDs.
 def list_stored_user_ids
-  db = init_credentials_store
-  db.execute('select userid from credentials')
+  Credentials.all.map(&:user_id)
 end
 
 ##
@@ -79,13 +55,13 @@ end
 # @param [Signet::OAuth2::Client] credentials
 #   OAuth 2.0 credentials to store.
 def store_credentials(user_id, credentials)
-  hash = {
-    access_token: credentials.access_token,
-    refresh_token: credentials.refresh_token
-  }
-  db = init_credentials_store
-  db.execute 'insert or replace into credentials values (?, ?)',
-    user_id, hash.to_yaml
-    
+  c = Credentials.first(:user_id => user_id)
+  if c
+    c.access_token = credentials.access_token
+    c.refresh_token = credentials.refresh_token
+  else
+    Credentials.create!(:user_id => user_id, :access_token => credentials.access_token, :refresh_token => credentials.refresh_token)
+  end
+
   get_stored_credentials(user_id)
 end

@@ -21,12 +21,11 @@ require "sinatra/config_file"
 config_file './config/app.yml'
 
 require './lib/google/mirror_client'
-
-##
-# Contains the behavior of the Sinatra Quick Start application.
+require './lib/models'
 
 set :haml, { format: :html5 }
 enable :sessions
+
 
 helpers do
   ##

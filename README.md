@@ -16,7 +16,8 @@ Mark's To Do
 ---
 - ~~Be able to delete timeline cards created from this quickstart from the device~~
   - just had to add `menuItems: [{ action: 'DELETE' }]` to timeline item
-- Add ~~`config/app.yml` to govern app configuration stuff~~
+- ~~Add `config/app.yml` to govern app configuration stuff~~
+- ~~Move from straight up SQLite to DataMapper~~
 - Record responses to cards in database (right now they are just inserted into the timeline)
 
 FAQ
