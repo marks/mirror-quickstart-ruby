@@ -23,12 +23,6 @@ require_relative 'credentials_store'
 # how to use OAuth2. Feel free to modify or rewrite it to fit the specific
 # needs of your application.
 
-SCOPES = [
-    'https://www.googleapis.com/auth/glass.timeline',
-    'https://www.googleapis.com/auth/glass.location',
-    'https://www.googleapis.com/auth/userinfo.profile'
-]
-
 ##
 # Error raised when an error occurred while retrieving credentials.
 class GetCredentialsError < StandardError
@@ -133,10 +127,10 @@ end
 #   State for the authorization URL.
 # @return [String]
 #   Authorization URL to redirect the user to.
-def get_authorization_url(user_id, state)
+def get_authorization_url(user_id, state, scopes = ['https://www.googleapis.com/auth/glass.timeline','https://www.googleapis.com/auth/glass.location','https://www.googleapis.com/auth/userinfo.profile'])
   client = Google::APIClient.new
   client.authorization = client_secrets
-  client.authorization.scope = SCOPES
+  client.authorization.scope = scopes
 
   return client.authorization.authorization_uri(
     approval_prompt: :force,
