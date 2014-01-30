@@ -23,3 +23,6 @@
           %form.form-inline(method="post" action="/delete-item")
             %input(type="hidden" name="id" value="#{timeline_item.id}")
             %button.btn.btn-block.btn-danger(type="submit") Delete
+
+  - if settings.debug_mode
+    %pre= timeline_item.to_hash

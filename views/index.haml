@@ -11,7 +11,7 @@
   - else
     - @timeline.items.each do |timeline_item|
       = haml :timeline_item, locals: { timeline_item: timeline_item }
-
+  
 %hr
 
 .row
@@ -93,3 +93,8 @@
         %input(type="hidden" name="subscriptionId" value="locations")
         %button.btn.btn-block.btn-success(type="submit")
           Subscribe to location updates
+-if settings.debug_mode
+  .row
+    .span12
+      %pre
+        = session.inspect
