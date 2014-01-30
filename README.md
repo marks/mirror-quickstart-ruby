@@ -15,7 +15,7 @@ Mark's Modifications
   - Moved `mirror_quick_start.rb` to `app.rb`
   - Moved `oauth_utils.rb`, `mirror_client.rb`, and `credentials_store.rb` to `lib/google` 
 - Added `Procfile` to support Heroku/`foreman`
-
+- Added ability to specify scopes in `get_authorization_url` method [commit](https://github.com/marks/mirror-quickstart-ruby/commit/864da18f50a899ee67428c16dff256387ad2a65e)
 
 Mark's To Do
 ---
