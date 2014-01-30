@@ -271,7 +271,7 @@ get '/oauth2callback' do
     session[:user_id] = user_info.id
 
     mirror = make_client(user_info.id)
-    bootstrap_new_user(mirror)
+    # bootstrap_new_user(mirror)
 
     redirect to '/'
   elsif session[:user_id].nil? ||
@@ -311,11 +311,9 @@ post '/notify-callback' do
         # here.
         @mirror.patch_timeline_item(timeline_item_id,
           { text: "Ruby Quick Start got your photo! #{caption}" })
-      elsif user_action[:type] == 'TAKE_A_NOTE'
+      else# user_action[:type] == 'TAKE_A_NOTE'
         question = timeline_item.text
-        answer = answer_civomega_question(question)
-        @mirror.patch_timeline_item(timeline_item_id,
-          { text: "Q: #{question};\n A: #{answer}" })
+        @mirror.patch_timeline_item(timeline_item_id, answer_civomega_question(question))
       end
     end
   when 'locations'
@@ -324,7 +322,7 @@ post '/notify-callback' do
 
     # Insert a new timeline card with the user's location.
     @mirror.insert_timeline_item({
-      text: "Ruby Quick Start says you are at " +
+      text: "You are at " +
         "#{location.latitude} by #{location.longitude}." })
   else
     puts "I don't know how to process this notification: " +
@@ -344,18 +342,19 @@ get '/attachment-proxy' do
 end
 
 get '/civomega/ask' do
+  content_type :json
   if params[:question]
     response = answer_civomega_question(params[:question])
   else
     response = "Please specify a question and try again."
   end
-  return response
+  return response.to_json
 end
 
 get '/civomega/contact' do
   @mirror.insert_contact({
     id: 'civomega',
-    displayName: '0000 CivOmega',
+    displayName: 'CivOmega',
     acceptCommands: [
       {:type => "TAKE_A_NOTE"}
     ]
