@@ -1,2 +1,8 @@
-debug_mode: true 
-path_to_client_secrets: config/client_secrets.json
+
+development: &common_settings
+  debug_mode: true 
+  path_to_client_secrets: config/client_secrets.json
+
+production:
+  <<: *common_settings
+  debug_mode: false
