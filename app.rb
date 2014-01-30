@@ -22,6 +22,7 @@ config_file './config/app.yml'
 
 require './lib/google/mirror_client'
 require './lib/models'
+require './lib/civomega'
 
 set :haml, { format: :html5 }
 enable :sessions
@@ -310,9 +311,11 @@ post '/notify-callback' do
         # here.
         @mirror.patch_timeline_item(timeline_item_id,
           { text: "Ruby Quick Start got your photo! #{caption}" })
-      else
-        @mirror.insert_timeline_item(
-          { text: "Server received the following: #{timeline_item.inspect}" })
+      elsif user_action[:type] == 'TAKE_A_NOTE'
+        question = timeline_item.text
+        answer = answer_civomega_question(question)
+        @mirror.patch_timeline_item(timeline_item_id,
+          { text: "Q: #{question};\n A: #{answer}" })
       end
     end
   when 'locations'
@@ -342,24 +345,11 @@ end
 
 get '/civomega/ask' do
   if params[:question]
-    response = "According to CivOmega.com... "
-    answer = RestClient.get("http://www.civomega.com/ask?question=#{URI.encode(params[:question])}").body
-    answer_doc = Nokogiri::HTML(answer)
-    answer_table = answer_doc.xpath('//table')
-    selected_answers = answer_table.xpath('//table/tbody/tr').first(3).map do |tr|
-      tr.xpath('td').map(&:text).join(",")
-    end
-    response += selected_answers.join("; ") + " ... " + answer_doc.xpath('//p').text + " ... Glassware by @Skram"
-    # response = "Answer from CivOmega.com: '#{answer}'; Glassware by @Skram of Social Health Insights"
+    response = answer_civomega_question(params[:question])
   else
     response = "Please specify a question and try again."
   end
-  
-  # return response
-
-  @mirror.insert_timeline_item({
-    text: response
-  })
+  return response
 end
 
 get '/civomega/contact' do
@@ -370,5 +360,4 @@ get '/civomega/contact' do
       {:type => "TAKE_A_NOTE"}
     ]
   })
-
 end
