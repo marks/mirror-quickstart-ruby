@@ -37,3 +37,7 @@ FAQ
         :api_method => plus.people.get,
         :parameters => {'collection' => 'public', 'userId' => 'me'}
       )
+
+- How do I push to Heroku if git it set to ignore the `client_secrets.json` file?
+  - Currently, to push to Heroku, I have a seperate `PRODUCTION` branch (that never gets published to GitHub) that does not ignore the `client_secrets.json` file. When I am ready to push to Heroku, I merge the master branch into the `PRODUCTION` branch and then issue the following command to push that branch to Heroku: `git push heroku PRODUCTION:master` so that the local `PRODUCTION` branch is published to Heroku's `master` branch.
+  - This is most definitely a bit convoluted and should be revisited soon.
