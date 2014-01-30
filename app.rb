@@ -289,10 +289,6 @@ post '/notify-callback' do
   # with those values instead.
   params = JSON.parse(request.body.read, symbolize_names: true)
 
-  puts "*"*20
-  puts params.inspect
-  puts "*"*20
-
   # The callback needs to create its own client with the user token from
   # the request.
   @client = make_client(params[:userToken])
@@ -322,9 +318,11 @@ post '/notify-callback' do
     location = @mirror.get_location(location_id)
 
     # Insert a new timeline card with the user's location.
-    @mirror.insert_timeline_item({
-      text: "You are at " +
-        "#{location.latitude} by #{location.longitude}." })
+    if settings.debug_mode
+      @mirror.insert_timeline_item({
+        text: "You are at " +
+          "#{location.latitude} by #{location.longitude}." })
+    end
   else
     puts "I don't know how to process this notification: " +
       "#{params[:collection]}"

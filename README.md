@@ -24,7 +24,7 @@ Mark's To Do
 FAQ
 ---
 - What is debug mode? (it can be set in `config/app.yml`)?
-  -  When debug mode is enabled, the app shows extra output in the browser and uses Google's Subscription Proxy https://developers.google.com/glass/tools-downloads/subscription-proxy
+  -  When debug mode is enabled, the app shows extra output in the browser/glassware and uses Google's Subscription Proxy https://developers.google.com/glass/tools-downloads/subscription-proxy
 
 - How do I use the credentials to make a non-Mirror API call?
   - Example of how to get user profile information (allowed by the `userinfo.profile` OAuth scope)
