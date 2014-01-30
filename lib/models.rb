@@ -4,8 +4,8 @@ DataMapper::setup(:default, ENV["DATABASE_URL"] || "sqlite3://#{Dir.pwd}/db/dev.
 class Credentials
   include DataMapper::Resource
   property :user_id, String, :key => true
-  property :access_token, String
-  property :refresh_token, String
+  property :access_token, String, :length => 255
+  property :refresh_token, String, :length => 255
 end
 
 DataMapper.finalize
