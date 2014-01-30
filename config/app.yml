@@ -5,4 +5,4 @@ development: &common_settings
 
 production:
   <<: *common_settings
-  debug_mode: false
+  # debug_mode: false
