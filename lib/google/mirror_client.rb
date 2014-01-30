@@ -20,6 +20,8 @@ require_relative 'oauth_utils'
 #
 # @author Tony Allevato
 class MirrorClient
+  attr_accessor :client
+
   ##
   # Creates a new Mirror client and uses the specified credentials to
   # authorize access.
