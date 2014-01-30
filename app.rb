@@ -295,6 +295,10 @@ post '/notify-callback' do
   # with those values instead.
   params = JSON.parse(request.body.read, symbolize_names: true)
 
+  puts "*"*20
+  puts params.inspect
+  puts "*"*20
+
   # The callback needs to create its own client with the user token from
   # the request.
   @client = make_client(params[:userToken])
