@@ -3,3 +3,16 @@
 *.sqlite3
 
 config/client_secrets.json
+.idea/.name
+
+.idea/mirror-quickstart-ruby.iml
+
+.idea/modules.xml
+
+.idea/misc.xml
+
+.idea/vcs.xml
+
+.idea/scopes/scope_settings.xml
+
+.idea/workspace.xml
