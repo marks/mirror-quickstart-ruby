@@ -14,3 +14,8 @@ end
 group :production do
   gem 'dm-postgres-adapter'
 end
+
+# group :civomega do
+  gem 'rest_client'
+  gem 'nokogiri'
+# end

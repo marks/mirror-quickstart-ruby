@@ -298,10 +298,9 @@ post '/notify-callback' do
   case params[:collection]
   when 'timeline'
     params[:userActions].each do |user_action|
+      timeline_item_id = params[:itemId]
+      timeline_item = @mirror.get_timeline_item(timeline_item_id)
       if user_action[:type] == 'SHARE'
-        timeline_item_id = params[:itemId]
-
-        timeline_item = @mirror.get_timeline_item(timeline_item_id)
         caption = timeline_item.text || ''
 
         # Alternatively, we could have updated the caption of the
@@ -311,6 +310,9 @@ post '/notify-callback' do
         # here.
         @mirror.patch_timeline_item(timeline_item_id,
           { text: "Ruby Quick Start got your photo! #{caption}" })
+      else
+        @mirror.patch_timeline_item(timeline_item_id,
+          { text: "Got it... #{params.inspect}" })
       end
     end
   when 'locations'
@@ -336,4 +338,37 @@ get '/attachment-proxy' do
 
   content_type attachment.content_type
   @mirror.download(attachment.content_url)
+end
+
+get '/civomega/ask' do
+  if params[:question]
+    response = "According to CivOmega.com... "
+    answer = RestClient.get("http://www.civomega.com/ask?question=#{URI.encode(params[:question])}").body
+    answer_doc = Nokogiri::HTML(answer)
+    answer_table = answer_doc.xpath('//table')
+    selected_answers = answer_table.xpath('//table/tbody/tr').first(3).map do |tr|
+      tr.xpath('td').map(&:text).join(",")
+    end
+    response += selected_answers.join("; ") + " ... " + answer_doc.xpath('//p').text + " ... Glassware by @Skram"
+    # response = "Answer from CivOmega.com: '#{answer}'; Glassware by @Skram of Social Health Insights"
+  else
+    response = "Please specify a question and try again."
+  end
+  
+  # return response
+
+  @mirror.insert_timeline_item({
+    text: response
+  })
+end
+
+get '/civomega/contact' do
+  @mirror.insert_contact({
+    id: 'civomega',
+    displayName: '0000 CivOmega',
+    acceptCommands: [
+      {:type => "TAKE_A_NOTE"}
+    ]
+  })
+
 end
