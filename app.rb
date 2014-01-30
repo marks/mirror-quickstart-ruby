@@ -235,7 +235,8 @@ end
 # Called to insert a new subscription.
 post '/insert-subscription' do
   callback = "#{base_url}/notify-callback"
-
+  callback = "https://mirrornotifications.appspot.com/forward?url=" + callback if settings.debug_mode
+  
   begin
     @mirror.insert_subscription(
       session[:user_id], params[:subscriptionId], callback)

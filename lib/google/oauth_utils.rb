@@ -68,7 +68,7 @@ end
 #   OAuth 2.0 credentials.
 def client_secrets
   Google::APIClient::ClientSecrets.load(
-    'config/client_secrets.json').to_authorization
+    settings.path_to_client_secrets).to_authorization
 end
 
 ##

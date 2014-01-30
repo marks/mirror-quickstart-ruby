@@ -1,1 +1,2 @@
-debug_mode: true
+debug_mode: true 
+path_to_client_secrets: config/client_secrets.json
