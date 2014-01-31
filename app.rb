@@ -314,10 +314,11 @@ post '/notify-callback' do
         # here.
         @mirror.patch_timeline_item(timeline_item_id,
           { text: "Ruby Quick Start got your photo! #{caption}" })
-      elsif user_action[:type] == 'LAUNCH'
-
+      elsif timeline_item.recipients.map(&:id).include?("civomega")
         question = timeline_item.text
         @mirror.patch_timeline_item(timeline_item_id, answer_civomega_question(question))
+      else
+        @mirror.insert_timeline_item({text: "Ruby Quick Start got a timeline item it doesnt know what to do with...\n#{timeline_item.to_hash}" })
       end
     end
   when 'locations'
