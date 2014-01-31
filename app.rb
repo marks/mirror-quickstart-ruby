@@ -15,8 +15,8 @@ set :haml, { format: :html5 }
 enable :sessions
 enable :logging, :dump_errors, :raise_errors
 
-configure do 
-  Log = Logger.new("log/#{settings.environment}.log")
+configure :development do 
+  Log = Logger.new("log/development.log")
   Log.level  = Logger::INFO 
 end
 
