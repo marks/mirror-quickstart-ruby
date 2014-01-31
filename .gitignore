@@ -20,3 +20,7 @@ config/client_secrets.json
 db/dev.db
 
 .env
+
+log/
+
+*.dev

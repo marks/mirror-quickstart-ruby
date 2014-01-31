@@ -1,8 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'sinatra'#, require: 'sinatra/base'
+gem 'sinatra'
 gem 'haml'
-gem 'google-api-client'
+gem 'google-api-client', :require => ['google/api_client', 'google/api_client/client_secrets']
 gem 'sinatra-contrib'
 gem 'json'
 gem 'data_mapper'

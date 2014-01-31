@@ -9,6 +9,8 @@ development: &common_settings
     client_id: <%= ENV['GOOGLE_OAUTH_CLIENT_ID'] %>
     javascript_origins:
       - <%= ENV['GOOGLE_OAUTH_JAVASCRIPT_ORIGIN'] %>
+  google_mirror:
+    subscription_route: "/subscription-callback"
 
 production:
   <<: *common_settings
