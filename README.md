@@ -1,9 +1,5 @@
-Google Mirror API's Quick Start for Ruby (using Sinatra)
+A fork of: Google Mirror API's Quick Start for Ruby (using Sinatra)
 ====
-
-The documentation for this quick start is maintained on developers.google.com.
-Please see here for more information:
-https://developers.google.com/glass/quickstart/ruby
 
 ___________
 
@@ -24,7 +20,7 @@ Mark's To Do
 FAQ
 ---
 - What is debug mode? (it can be set in `config/app.yml`)?
-  -  When debug mode is enabled, the app shows extra output in the browser/glassware and uses Google's Subscription Proxy https://developers.google.com/glass/tools-downloads/subscription-proxy
+  -  When debug mode is enabled, the app shows extra output in the browser/glassware and uses [Google's Subscription Proxy](https://developers.google.com/glass/tools-downloads/subscription-proxy)
 
 - How do I use the credentials to make a non-Mirror API call?
   - Example of how to get user profile information (allowed by the `userinfo.profile` OAuth scope)
@@ -38,10 +34,24 @@ FAQ
         :parameters => {'collection' => 'public', 'userId' => 'me'}
       )
 
-- How do I push to Heroku if git it set to ignore the `client_secrets.json` file?
-  - Currently, to push to Heroku, I have a seperate `PRODUCTION` branch (that never gets published to GitHub) that does not ignore the `client_secrets.json` file. When I am ready to push to Heroku, I merge the master branch into the `PRODUCTION` branch and then issue the following command to push that branch to Heroku: `git push heroku PRODUCTION:master` so that the local `PRODUCTION` branch is published to Heroku's `master` branch.
-  - This is most definitely a bit convoluted and should be revisited soon.
+- How do I run this locally?
+  1. `bundle install`
+  2. Configure by settings* in `config/app.erb.yml` as needed and/or setting respective environment variables. I suggest using [foreman local variable set up as suggested by Heroku](https://devcenter.heroku.com/articles/config-vars#local-setup)
+  3. `bundle exec ruby app.rb` or `foreman start`
 
+- How do I run this on Herkou?
+  1. `heroku create`
+  2. Depending on where you want to store configuration variables*, set variables in `config/app.erb.yml` and/or [set Heroku environment variables](https://devcenter.heroku.com/articles/config-vars#setting-up-config-vars-for-a-deployed-application)
+  3. `git push heroku master`
+
+* = see original Google documentation, below, for how to create an API project and get the right IDs, secrets, etc. from the [Google API console](https://cloud.google.com/console/project)
 CivOmega Caveats
 ---
 - Only shows/displays first two columns
+
+___________
+
+The original documentation for this quick start is maintained on developers.google.com.
+Please see here for more information:
+https://developers.google.com/glass/quickstart/ruby
+
