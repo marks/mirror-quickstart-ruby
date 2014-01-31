@@ -243,7 +243,7 @@ post '/insert-contact' do
     id: parameterize(settings.google_mirror["contact_name"]),
     displayName: settings.google_mirror["contact_name"],
     imageUrls: ["http://www.itespresso.fr/wp-content/uploads/2011/10/opendata.jpg"],
-    acceptCommands: [{:type => "TAKE_A_NOTE"}]
+    acceptCommands: [{:type => "TAKE_A_NOTE"}],
     speakableName: settings.google_mirror["contact_name"]
   })
   session[:message] = "Inserted the '#{settings.google_mirror["contact_name"]}' contact."
