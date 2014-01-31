@@ -244,7 +244,7 @@ post '/insert-contact' do
     displayName: settings.google_mirror["contact_name"],
   })
 
-  session[:message] = "Inserted the '#{parameterize(settings.google_mirror["contact_name"]}' contact."
+  session[:message] = "Inserted the '#{parameterize(settings.google_mirror["contact_name"])}' contact."
   redirect to '/'
 end
 
@@ -252,14 +252,14 @@ end
 # Called when the button is clicked that deletes the contact.
 post '/delete-contact' do
   @mirror.delete_contact(parameterize(settings.google_mirror["contact_name"]))
-  session[:message] = "Deleted the '#{settings.google_mirror["contact_name"])}' contact."
+  session[:message] = "Deleted the '#{settings.google_mirror["contact_name"]}' contact."
   redirect to '/'
 end
 
 ##
 # Called to insert a new subscription.
 post '/insert-subscription' do
-  callback = "#{base_url}/#{settings.google_mirror["subscription_route"]}"
+  callback = "#{base_url}#{settings.google_mirror["subscription_route"]}"
   callback = "https://mirrornotifications.appspot.com/forward?url=" + callback if settings.debug_mode
   
   begin
@@ -280,15 +280,13 @@ end
 # Called to delete a subscription.
 post '/delete-subscription' do
   @mirror.delete_subscription(params[:subscriptionId])
-
-  session[:message] =
-    "Unsubscribed from #{params[:subscriptionId]} notifications."
+  session[:message] = "Unsubscribed from #{params[:subscriptionId]} notifications."
   redirect to '/'
 end
 
 ##
 # Called by the Mirror API to notify us of events that we are subscribed to.
-post '/notify-callback' do
+post settings.google_mirror["subscription_route"] do
   # The parameters for a subscription callback come as a JSON payload in
   # the body of the request, so we just overwrite the empty params hash
   # with those values instead.
