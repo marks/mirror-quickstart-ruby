@@ -47,7 +47,7 @@ def answer_civomega_question(question)
     card_hash = {
       :text => "Sorry, CivOmega did not have an answer to '#{question}'",
       :speakableType => "Question and Answer",
-      :speakableText => "Sorry, CivOmega.com did not have an answer to '#{question}'",,    
+      :speakableText => "Sorry, CivOmega.com did not have an answer to '#{question}'",
       :menuItems => [{ :action => 'READ_ALOUD' }, { :action => 'DELETE' } ]
     }
   end
