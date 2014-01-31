@@ -242,6 +242,8 @@ post '/insert-contact' do
   @mirror.insert_contact({
     id: parameterize(settings.google_mirror["contact_name"]),
     displayName: settings.google_mirror["contact_name"],
+    acceptCommands: ["TAKE_A_NOTE"],
+    speakableName: settings.google_mirror["contact_name"]
   })
 
   session[:message] = "Inserted the '#{parameterize(settings.google_mirror["contact_name"])}' contact."
