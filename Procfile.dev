@@ -1,0 +1,2 @@
+web: shotgun app.rb -p $PORT
+log: tail -f log/*

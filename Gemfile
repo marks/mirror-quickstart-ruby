@@ -9,13 +9,13 @@ gem 'data_mapper'
 
 group :development do
   gem 'dm-sqlite-adapter'
+  gem 'shotgun'
 end
 
 group :production do
   gem 'dm-postgres-adapter'
 end
 
-# group :civomega do
-  gem 'rest_client'
-  gem 'nokogiri'
-# end
+# for CivOmega functionality
+gem 'rest_client'
+gem 'nokogiri'

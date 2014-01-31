@@ -37,7 +37,7 @@ FAQ
 - How do I run this locally?
   1. `bundle install`
   2. Configure by settings* in `config/app.erb.yml` as needed and/or setting respective environment variables. I suggest using [foreman local variable set up as suggested by Heroku](https://devcenter.heroku.com/articles/config-vars#local-setup)
-  3. `bundle exec ruby app.rb` or `foreman start`
+  3. `foreman start -f Procfile.dev`
 
 - How do I run this on Herkou?
   1. `heroku create`
