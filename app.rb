@@ -251,9 +251,8 @@ end
 ##
 # Called when the button is clicked that deletes the contact.
 post '/delete-contact' do
-  @mirror.delete_contact(paramaterize(settings.google_mirror["contact_name"]))
-
-  session[:message] = "Deleted the '#{parameterize(settings.google_mirror["contact_name"])}' contact."
+  @mirror.delete_contact(parameterize(settings.google_mirror["contact_name"]))
+  session[:message] = "Deleted the '#{settings.google_mirror["contact_name"])}' contact."
   redirect to '/'
 end
 
