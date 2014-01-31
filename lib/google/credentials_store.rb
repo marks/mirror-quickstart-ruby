@@ -55,9 +55,10 @@ end
 # @param [Signet::OAuth2::Client] credentials
 #   OAuth 2.0 credentials to store.
 def store_credentials(user_id, credentials)
+  puts credentials
   c = Credentials.first(:user_id => user_id)
   if c
-    c.update_attributes!(:access_token => credentials.access_token, :refresh_token => credentials.refresh_token)
+    c.update(:access_token => "aaaa"+credentials.access_token, :refresh_token => credentials.refresh_token)
   else
     Credentials.create!(:user_id => user_id, :access_token => credentials.access_token, :refresh_token => credentials.refresh_token)
   end
