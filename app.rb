@@ -1,86 +1,85 @@
-# Copyright 2013 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 require 'bundler'
 Bundler.require
+
+# load configuration file
 require "sinatra/config_file"
 config_file './config/app.erb.yml'
 
-require './lib/google/mirror_client'
 require './lib/models'
 require './lib/civomega'
+require './lib/google/mirror_client'
 
-$stdout.sync if settings.debug_mode# realtime logging, please!
+include ActiveSupport::Inflector
 
 set :haml, { format: :html5 }
 enable :sessions
+enable :logging, :dump_errors, :raise_errors
 
+configure :development do 
+  Log = Logger.new("log/development.log")
+  Log.level  = Logger::INFO 
+end
 
 helpers do
-  ##
-  # Returns the base URL of the application.
   def base_url
-    @base_url ||=
-      "#{request.env['rack.url_scheme']}://#{request.env['HTTP_HOST']}"
-  end
-
-  ##
-  # Creates and returns a MirrorClient that is authorized by looking up
-  # the stored credentials for the specified user ID.
-  def make_client(user_id)
-    @mirror = MirrorClient.new(get_stored_credentials(user_id))
-  end
-
-  ##
-  # Bootstrap the new user by inserting a welcome item into their
-  # timeline, creating the Ruby Quick Start contact, and subscribing
-  # to timeline notifications.
-  def bootstrap_new_user(mirror)
-    mirror.insert_timeline_item({
-      text: 'Welcome to the Mirror API Ruby Quick Start'
-    })
-
-    mirror.insert_contact({
-      id: 'ruby-quick-start',
-      displayName: '0000 Ruby Quick Start',
-      imageUrls: ["#{base_url}/images/chipotle-tube-640x360.jpg"],
-      acceptCommands: [
-        {:type => "POST_AN_UPDATE"}
-      ]
-    })
-
-    # Guard this statement in case the application is not running as HTTPS.
-    begin
-      callback = "#{base_url}/notify-callback"
-      mirror.insert_subscription(session[:user_id], 'timeline', callback)
-    rescue
-      # Do nothing here.
-    end
+    "#{request.env['rack.url_scheme']}://#{request.env['HTTP_HOST']}"
   end
 end
 
-##
-# Called before any route (except for the authorization and notification
-# callbacks) is processed. Here we check to see if the user is currently
-# authenticated; if so, we create a Mirror client and store it for use in
-# the routes below. Otherwise, we redirect them to be authorized.
-before /^(?!\/(?:oauth2callback|notify-callback))/ do
-  if session[:user_id].nil? || get_stored_credentials(session[:user_id]).nil?
-    redirect to '/oauth2callback'
+before do
+  # create Google API client
+  @client = Google::APIClient.new
+  @client.authorization = Google::APIClient::ClientSecrets.new({
+    "web"=> {
+      "auth_uri"=>"https://accounts.google.com/o/oauth2/auth",
+      "token_uri"=>"https://accounts.google.com/o/oauth2/token",
+      "auth_provider_x509_cert_url"=>"https://www.googleapis.com/oauth2/v1/certs",
+      "client_secret" => settings.google_oauth["client_secret"],
+      "client_email" => settings.google_oauth["client_email"],
+      "redirect_uris" => settings.google_oauth["redirect_uris"],
+      "client_x509_cert_url" => settings.google_oauth["client_x509_cert_url"],
+      "client_id"=> settings.google_oauth["client_id"], 
+      "javascript_origins"=> settings.google_oauth["javascript_origins"]
+    }
+  }).to_authorization
+  @client.authorization.scope = [
+    'https://www.googleapis.com/auth/glass.timeline',
+    'https://www.googleapis.com/auth/glass.location',
+    'https://www.googleapis.com/auth/userinfo.profile'
+  ]
+
+  @mirror = MirrorClient.new(@client.authorization)#@client.discovered_api( "mirror", "v1" )
+  @oauth2 = @client.discovered_api( "oauth2", "v2" )
+  @client.authorization.code = params[:code] if params[:code]
+  
+  #if we get a push from google, do a different lookup based on the userToken
+  if request.path_info == settings.google_mirror["subscription_route"]
+    @data = JSON.parse(request.body.read)
+    token_pair = TokenPair.get(@data['userToken'])
+    @client.authorization.update_token!(token_pair.to_hash)
   else
-    make_client(session[:user_id])
+    if session[:token_id] #if the user is logged in
+      token_pair = TokenPair.get(session[:token_id])
+      @client.authorization.update_token!(token_pair.to_hash)
+      @phone_number = token_pair.phone_number
+    else #if we are receiving an SMS
+      token_pair = TokenPair.first(:phone_number => params[:To])
+      if !token_pair.nil?
+        @client.authorization.update_token!(token_pair.to_hash)
+      end
+    end
   end
+
+  # if there is a refresh token and the pair has expired, fetch a new access token
+  if @client.authorization.refresh_token && @client.authorization.expired?
+    @client.authorization.fetch_access_token!
+  end
+
+  #redirect the user to OAuth if we're logged out
+  unless @client.authorization.access_token || request.path_info =~ /^\/oauth2/
+    redirect to("/oauth2authorize")
+  end
+
 end
 
 ##
@@ -91,14 +90,13 @@ get '/' do
   @timeline = @mirror.list_timeline(3)
 
   begin
-    @contact = @mirror.get_contact('ruby-quick-start')
+    @contact = @mirror.get_contact(parameterize(settings.google_mirror["contact_name"]))
   rescue Google::APIClient::ClientError => e
     @contact = nil
   end
 
   @timeline_subscription_exists = false
   @location_subscription_exists = false
-
   @mirror.list_subscriptions.items.each do |subscription|
     case subscription.id
     when 'timeline'
@@ -110,6 +108,36 @@ get '/' do
 
   haml :index
 end
+
+get "/oauth2authorize" do
+  redirect @client.authorization.authorization_uri.to_s, 303
+end
+
+get "/oauth2callback" do
+  @client.authorization.fetch_access_token!
+  token_pair = if session[:token_id]
+    TokenPair.get(session[:token_id])
+  else
+    TokenPair.new
+  end
+  token_pair.update_token!(@client.authorization)
+  token_pair.save
+  session[:token_id] = token_pair.id
+  redirect to("/")
+end
+
+post settings.google_mirror["subscription_route"] do
+  reply_result = @client.execute(
+    :api_method => @glass.timeline.get,
+    :parameters => {"id" => @data["itemId"]},
+    :authorization => @client.authorization)
+  reply = reply_result.data.text
+  msg_result = @client.execute(
+    :api_method => @glass.timeline.get,
+    :parameters => {"id" => reply_result.data.inReplyTo},
+    :authorization => @client.authorization)
+end
+
 
 ##
 # Called when one of the buttons is clicked that inserts an item into
@@ -212,28 +240,26 @@ end
 # Called when the button is clicked that inserts a new contact.
 post '/insert-contact' do
   @mirror.insert_contact({
-    id: 'ruby-quick-start',
-    displayName: 'Ruby Quick Start',
-    imageUrls: ["#{base_url}/images/chipotle-tube-640x360.jpg"]
+    id: parameterize(settings.google_mirror["contact_name"]),
+    displayName: settings.google_mirror["contact_name"],
   })
 
-  session[:message] = 'Inserted the Ruby Quick Start contact.'
+  session[:message] = "Inserted the '#{parameterize(settings.google_mirror["contact_name"])}' contact."
   redirect to '/'
 end
 
 ##
 # Called when the button is clicked that deletes the contact.
 post '/delete-contact' do
-  @mirror.delete_contact('ruby-quick-start')
-
-  session[:message] = 'Deleted the Ruby Quick Start contact.'
+  @mirror.delete_contact(parameterize(settings.google_mirror["contact_name"]))
+  session[:message] = "Deleted the '#{settings.google_mirror["contact_name"])}' contact."
   redirect to '/'
 end
 
 ##
 # Called to insert a new subscription.
 post '/insert-subscription' do
-  callback = "#{base_url}/notify-callback"
+  callback = "#{base_url}/#{settings.google_mirror["subscription_route"]}"
   callback = "https://mirrornotifications.appspot.com/forward?url=" + callback if settings.debug_mode
   
   begin
@@ -258,29 +284,6 @@ post '/delete-subscription' do
   session[:message] =
     "Unsubscribed from #{params[:subscriptionId]} notifications."
   redirect to '/'
-end
-
-##
-# Called to handle OAuth2 authorization.
-get '/oauth2callback' do
-  if params[:code]
-    # Handle step 2 of the OAuth 2.0 dance - code exchange
-    credentials = get_credentials(params[:code], nil)
-    user_info = get_user_info(credentials)
-    session[:user_id] = user_info.id
-
-    mirror = make_client(user_info.id)
-    # bootstrap_new_user(mirror)
-
-    redirect to '/'
-  elsif session[:user_id].nil? ||
-    get_stored_credentials(session[:user_id]).nil?
-    # Handle step 1 of the OAuth 2.0 dance - redirect to Google
-    redirect to get_authorization_url(nil, nil)
-  else
-    # We're authenticated, so redirect back to the base URL.
-    redirect to '/'
-  end
 end
 
 ##
@@ -314,7 +317,7 @@ post '/notify-callback' do
         # here.
         @mirror.patch_timeline_item(timeline_item_id,
           { text: "Ruby Quick Start got your photo! #{caption}" })
-      elsif timeline_item.recipients.map(&:id).include?("civomega")
+      elsif timeline_item.recipients.map(&:id).include?(paramaterize(settings.google_mirror["contact_name"]))
         question = timeline_item.text
         @mirror.patch_timeline_item(timeline_item_id, answer_civomega_question(question))
       else
@@ -349,6 +352,7 @@ get '/attachment-proxy' do
   @mirror.download(attachment.content_url)
 end
 
+
 get '/civomega/ask' do
   content_type :json
   if params[:question]
@@ -357,14 +361,4 @@ get '/civomega/ask' do
     response = "Please specify a question and try again."
   end
   return response.to_json
-end
-
-get '/civomega/contact' do
-  @mirror.insert_contact({
-    id: 'civomega',
-    displayName: 'CivOmega',
-    acceptCommands: [
-      {:type => "TAKE_A_NOTE"}
-    ]
-  })
 end

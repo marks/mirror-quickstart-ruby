@@ -1,8 +1,5 @@
-A fork of: Google Mirror API's Quick Start for Ruby (using Sinatra)
+A highly-modified fork of: Google Mirror API's Quick Start for Ruby (using Sinatra)
 ====
-
-___________
-
 
 Mark's Modifications
 ---
@@ -37,7 +34,7 @@ FAQ
 - How do I run this locally?
   1. `bundle install`
   2. Configure by settings* in `config/app.erb.yml` as needed and/or setting respective environment variables. I suggest using [foreman local variable set up as suggested by Heroku](https://devcenter.heroku.com/articles/config-vars#local-setup)
-  3. `bundle exec ruby app.rb` or `foreman start`
+  3. `foreman start -f Procfile.dev` # this includes
 
 - How do I run this on Herkou?
   1. `heroku create`
@@ -50,8 +47,9 @@ CivOmega Caveats
 - Only shows/displays first two columns
 
 ___________
-
-The original documentation for this quick start is maintained on developers.google.com.
+Credits
+---
+- The original documentation for this quick start is maintained on developers.google.com.
 Please see here for more information:
 https://developers.google.com/glass/quickstart/ruby
-
+- Inspiration and some code from [@jonmarkgo](http://github.com/jonmarkgo)'s https://github.com/jonmarkgo/TwilioGlassSMS
