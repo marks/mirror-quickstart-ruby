@@ -9,7 +9,7 @@ require './lib/models'
 require './lib/civomega'
 require './lib/google/mirror_client'
 
-$stdout.sync if settings.debug_mode# realtime logging, please!
+include ActiveSupport::Inflector
 
 set :haml, { format: :html5 }
 enable :sessions
@@ -82,6 +82,32 @@ before do
 
 end
 
+##
+# Handles the index route.
+get '/' do
+  @message = session.delete(:message)
+
+  @timeline = @mirror.list_timeline(3)
+
+  begin
+    @contact = @mirror.get_contact(parameterize(settings.google_mirror["contact_name"]))
+  rescue Google::APIClient::ClientError => e
+    @contact = nil
+  end
+
+  @timeline_subscription_exists = false
+  @location_subscription_exists = false
+  @mirror.list_subscriptions.items.each do |subscription|
+    case subscription.id
+    when 'timeline'
+      @timeline_subscription_exists = true
+    when 'locations'
+      @location_subscription_exists = true
+    end
+  end
+
+  haml :index
+end
 
 get "/oauth2authorize" do
   redirect @client.authorization.authorization_uri.to_s, 303
@@ -112,60 +138,6 @@ post settings.google_mirror["subscription_route"] do
     :authorization => @client.authorization)
 end
 
-# get "/" do
-#   api_result = @client.execute(
-#     :api_method => @oauth2.userinfo.get)
-  
-#   # @mirror.insert_timeline_item({
-#   #   text: 'What did you have for lunch?',
-#   #   speakableText: 'What did you eat? Bacon?',
-#   #   notification: { level: 'DEFAULT' },
-#   #   menuItems: [
-#   #     { action: 'REPLY' },
-#   #     { action: 'READ_ALOUD' },
-#   #     { action: 'SHARE' },
-#   #     { action: 'CUSTOM',
-#   #       id: 'safe-for-later',
-#   #       values: [{
-#   #         displayName: 'Drill Into',
-#   #         iconUrl: "#{base_url}/images/drill.png"
-#   #       }] },
-#   #     { action: 'DELETE' },
-#   #   ]
-#   # })
-
-#   "You have authenticated as G+ user #{api_result.data.name}"
-
-
-# end
-
-##
-# Handles the index route.
-get '/' do
-  @message = session.delete(:message)
-
-  @timeline = @mirror.list_timeline(3)
-
-  begin
-    @contact = @mirror.get_contact('ruby-quick-start')
-  rescue Google::APIClient::ClientError => e
-    @contact = nil
-  end
-
-  @timeline_subscription_exists = false
-  @location_subscription_exists = false
-
-  @mirror.list_subscriptions.items.each do |subscription|
-    case subscription.id
-    when 'timeline'
-      @timeline_subscription_exists = true
-    when 'locations'
-      @location_subscription_exists = true
-    end
-  end
-
-  haml :index
-end
 
 ##
 # Called when one of the buttons is clicked that inserts an item into
@@ -186,241 +158,208 @@ post '/insert-item' do
   redirect to '/'
 end
 
-# ##
-# # Called when the button is clicked that inserts a new timeline item
-# # that you can reply to.
-# post '/insert-item-with-action' do
-#   @mirror.insert_timeline_item({
-#     text: 'What did you have for lunch?',
-#     speakableText: 'What did you eat? Bacon?',
-#     notification: { level: 'DEFAULT' },
-#     menuItems: [
-#       { action: 'REPLY' },
-#       { action: 'READ_ALOUD' },
-#       { action: 'SHARE' },
-#       { action: 'CUSTOM',
-#         id: 'safe-for-later',
-#         values: [{
-#           displayName: 'Drill Into',
-#           iconUrl: "#{base_url}/images/drill.png"
-#         }] },
-#       { action: 'DELETE' },
-#     ]
-#   })
+##
+# Called when the button is clicked that inserts a new timeline item
+# that you can reply to.
+post '/insert-item-with-action' do
+  @mirror.insert_timeline_item({
+    text: 'What did you have for lunch?',
+    speakableText: 'What did you eat? Bacon?',
+    notification: { level: 'DEFAULT' },
+    menuItems: [
+      { action: 'REPLY' },
+      { action: 'READ_ALOUD' },
+      { action: 'SHARE' },
+      { action: 'CUSTOM',
+        id: 'safe-for-later',
+        values: [{
+          displayName: 'Drill Into',
+          iconUrl: "#{base_url}/images/drill.png"
+        }] },
+      { action: 'DELETE' },
+    ]
+  })
 
-#   session[:message] = 'Inserted a timeline item that you can reply to.'
-#   redirect to '/'
-# end
+  session[:message] = 'Inserted a timeline item that you can reply to.'
+  redirect to '/'
+end
 
-# ##
-# # Called when the button is clicked that inserts a Haml-rendered HTML
-# # item into the user's timeline.
-# post '/insert-pretty-item' do
-#   locals = {
-#     blue_line: params[:blue_line],
-#     green_line: params[:green_line],
-#     yellow_line: params[:yellow_line],
-#     red_line: params[:red_line]
-#   }
+##
+# Called when the button is clicked that inserts a Haml-rendered HTML
+# item into the user's timeline.
+post '/insert-pretty-item' do
+  locals = {
+    blue_line: params[:blue_line],
+    green_line: params[:green_line],
+    yellow_line: params[:yellow_line],
+    red_line: params[:red_line]
+  }
 
-#   # Make sure to specify layout: false or you'll end up rendering a
-#   # complete HTML document instead of just the partial.
-#   html = haml(:pretty, layout: false, locals: locals)
-#   @mirror.insert_timeline_item({ html: html })
+  # Make sure to specify layout: false or you'll end up rendering a
+  # complete HTML document instead of just the partial.
+  html = haml(:pretty, layout: false, locals: locals)
+  @mirror.insert_timeline_item({ html: html })
 
-#   session[:message] = 'Inserted a pretty timeline item.'
-#   redirect to '/'
-# end
+  session[:message] = 'Inserted a pretty timeline item.'
+  redirect to '/'
+end
 
-# ##
-# # Called when the button is clicked that inserts a timeline card into
-# # all users' timelines.
-# post '/insert-all-users' do
-#   user_ids = list_stored_user_ids
-#   if user_ids.length > 10
-#     session[:message] =
-#       "Found #{user_ids.length} users. Aborting to save your quota."
-#   else
-#     user_ids.each do |user_id|
-#       user_client = make_client(user_id)
+##
+# Called when the button is clicked that inserts a timeline card into
+# all users' timelines.
+post '/insert-all-users' do
+  user_ids = list_stored_user_ids
+  if user_ids.length > 10
+    session[:message] =
+      "Found #{user_ids.length} users. Aborting to save your quota."
+  else
+    user_ids.each do |user_id|
+      user_client = make_client(user_id)
 
-#       user_client.insert_timeline_item({
-#         text: "Did you know cats have 167 bones in their tails? Mee-wow!"
-#       })
-#     end
+      user_client.insert_timeline_item({
+        text: "Did you know cats have 167 bones in their tails? Mee-wow!"
+      })
+    end
 
-#     session[:message] = "Sent a cat fact to #{user_ids.length} users."
-#   end
+    session[:message] = "Sent a cat fact to #{user_ids.length} users."
+  end
 
-#   redirect to '/'
-# end
+  redirect to '/'
+end
 
-# ##
-# # Called when the Delete button next to a timeline item is clicked.
-# post '/delete-item' do
-#   @mirror.delete_timeline_item(params[:id])
+##
+# Called when the Delete button next to a timeline item is clicked.
+post '/delete-item' do
+  @mirror.delete_timeline_item(params[:id])
   
-#   session[:message] = 'Deleted the timeline item.'
-#   redirect to '/'
-# end
+  session[:message] = 'Deleted the timeline item.'
+  redirect to '/'
+end
 
-# ##
-# # Called when the button is clicked that inserts a new contact.
-# post '/insert-contact' do
-#   @mirror.insert_contact({
-#     id: 'ruby-quick-start',
-#     displayName: 'Ruby Quick Start',
-#     imageUrls: ["#{base_url}/images/chipotle-tube-640x360.jpg"]
-#   })
+##
+# Called when the button is clicked that inserts a new contact.
+post '/insert-contact' do
+  @mirror.insert_contact({
+    id: parameterize(settings.google_mirror["contact_name"]),
+    displayName: settings.google_mirror["contact_name"],
+  })
 
-#   session[:message] = 'Inserted the Ruby Quick Start contact.'
-#   redirect to '/'
-# end
+  session[:message] = "Inserted the '#{parameterize(settings.google_mirror["contact_name"])}' contact."
+  redirect to '/'
+end
 
-# ##
-# # Called when the button is clicked that deletes the contact.
-# post '/delete-contact' do
-#   @mirror.delete_contact('ruby-quick-start')
+##
+# Called when the button is clicked that deletes the contact.
+post '/delete-contact' do
+  @mirror.delete_contact(paramaterize(settings.google_mirror["contact_name"]))
 
-#   session[:message] = 'Deleted the Ruby Quick Start contact.'
-#   redirect to '/'
-# end
+  session[:message] = "Deleted the '#{parameterize(settings.google_mirror["contact_name"])}' contact."
+  redirect to '/'
+end
 
-# ##
-# # Called to insert a new subscription.
-# post '/insert-subscription' do
-#   callback = "#{base_url}/notify-callback"
-#   callback = "https://mirrornotifications.appspot.com/forward?url=" + callback if settings.debug_mode
+##
+# Called to insert a new subscription.
+post '/insert-subscription' do
+  callback = "#{base_url}/#{settings.google_mirror["subscription_route"]}"
+  callback = "https://mirrornotifications.appspot.com/forward?url=" + callback if settings.debug_mode
   
-#   begin
-#     @mirror.insert_subscription(
-#       session[:user_id], params[:subscriptionId], callback)
+  begin
+    @mirror.insert_subscription(
+      session[:user_id], params[:subscriptionId], callback)
 
-#     session[:message] =
-#       "Subscribed to #{params[:subscriptionId]} notifications."
-#   rescue
-#     session[:message] =
-#       "Could not subscribe because the application is not running as HTTPS."
-#   end
+    session[:message] =
+      "Subscribed to #{params[:subscriptionId]} notifications."
+  rescue
+    session[:message] =
+      "Could not subscribe because the application is not running as HTTPS."
+  end
 
-#   redirect to '/'
-# end
+  redirect to '/'
+end
 
-# ##
-# # Called to delete a subscription.
-# post '/delete-subscription' do
-#   @mirror.delete_subscription(params[:subscriptionId])
+##
+# Called to delete a subscription.
+post '/delete-subscription' do
+  @mirror.delete_subscription(params[:subscriptionId])
 
-#   session[:message] =
-#     "Unsubscribed from #{params[:subscriptionId]} notifications."
-#   redirect to '/'
-# end
+  session[:message] =
+    "Unsubscribed from #{params[:subscriptionId]} notifications."
+  redirect to '/'
+end
 
-# ##
-# # Called to handle OAuth2 authorization.
-# get '/oauth2callback' do
-#   if params[:code]
-#     # Handle step 2 of the OAuth 2.0 dance - code exchange
-#     credentials = get_credentials(params[:code], nil)
-#     user_info = get_user_info(credentials)
-#     session[:user_id] = user_info.id
+##
+# Called by the Mirror API to notify us of events that we are subscribed to.
+post '/notify-callback' do
+  # The parameters for a subscription callback come as a JSON payload in
+  # the body of the request, so we just overwrite the empty params hash
+  # with those values instead.
+  params = JSON.parse(request.body.read, symbolize_names: true)
 
-#     mirror = make_client(user_info.id)
-#     # bootstrap_new_user(mirror)
+  # The callback needs to create its own client with the user token from
+  # the request.
+  @client = make_client(params[:userToken])
 
-#     redirect to '/'
-#   elsif session[:user_id].nil? ||
-#     get_stored_credentials(session[:user_id]).nil?
-#     # Handle step 1 of the OAuth 2.0 dance - redirect to Google
-#     redirect to get_authorization_url(nil, nil)
-#   else
-#     # We're authenticated, so redirect back to the base URL.
-#     redirect to '/'
-#   end
-# end
+  case params[:collection]
+  when 'timeline'
+    params[:userActions].each do |user_action|
+      timeline_item_id = params[:itemId]
+      timeline_item = @mirror.get_timeline_item(timeline_item_id)
 
-# ##
-# # Called by the Mirror API to notify us of events that we are subscribed to.
-# post '/notify-callback' do
-#   # The parameters for a subscription callback come as a JSON payload in
-#   # the body of the request, so we just overwrite the empty params hash
-#   # with those values instead.
-#   params = JSON.parse(request.body.read, symbolize_names: true)
+      puts "*** userAction payload => #{params.inspect}"
+      puts "*** user acted on => #{timeline_item.inspect}"
 
-#   # The callback needs to create its own client with the user token from
-#   # the request.
-#   @client = make_client(params[:userToken])
+      if user_action[:type] == 'SHARE'
+        caption = timeline_item.text || ''
 
-#   case params[:collection]
-#   when 'timeline'
-#     params[:userActions].each do |user_action|
-#       timeline_item_id = params[:itemId]
-#       timeline_item = @mirror.get_timeline_item(timeline_item_id)
+        # Alternatively, we could have updated the caption of the
+        # timeline_item object itself and used the update method (especially
+        # since we needed to get the full TimelineItem in order to retrieve
+        # the original caption), but I wanted to illustrate the patch method
+        # here.
+        @mirror.patch_timeline_item(timeline_item_id,
+          { text: "Ruby Quick Start got your photo! #{caption}" })
+      elsif timeline_item.recipients.map(&:id).include?(paramaterize(settings.google_mirror["contact_name"]))
+        question = timeline_item.text
+        @mirror.patch_timeline_item(timeline_item_id, answer_civomega_question(question))
+      else
+        @mirror.insert_timeline_item({text: "Ruby Quick Start got a timeline item it doesnt know what to do with...\n#{timeline_item.to_hash}" })
+      end
+    end
+  when 'locations'
+    location_id = params[:itemId]
+    location = @mirror.get_location(location_id)
 
-#       puts "*** userAction payload => #{params.inspect}"
-#       puts "*** user acted on => #{timeline_item.inspect}"
+    # Insert a new timeline card with the user's location.
+    if settings.debug_mode
+      @mirror.insert_timeline_item({
+        text: "You are at " +
+          "#{location.latitude} by #{location.longitude}." })
+    end
+  else
+    puts "I don't know how to process this notification: " +
+      "#{params[:collection]}"
+  end
+  return ""
+end
 
-#       if user_action[:type] == 'SHARE'
-#         caption = timeline_item.text || ''
+##
+# A proxy that lets us access the data for attachments (because it requires
+# authorization; we cannot just load the URL directly).
+get '/attachment-proxy' do
+  attachment = @mirror.get_timeline_attachment(
+    params[:timeline_item_id], params[:attachment_id])
 
-#         # Alternatively, we could have updated the caption of the
-#         # timeline_item object itself and used the update method (especially
-#         # since we needed to get the full TimelineItem in order to retrieve
-#         # the original caption), but I wanted to illustrate the patch method
-#         # here.
-#         @mirror.patch_timeline_item(timeline_item_id,
-#           { text: "Ruby Quick Start got your photo! #{caption}" })
-#       elsif timeline_item.recipients.map(&:id).include?("civomega")
-#         question = timeline_item.text
-#         @mirror.patch_timeline_item(timeline_item_id, answer_civomega_question(question))
-#       else
-#         @mirror.insert_timeline_item({text: "Ruby Quick Start got a timeline item it doesnt know what to do with...\n#{timeline_item.to_hash}" })
-#       end
-#     end
-#   when 'locations'
-#     location_id = params[:itemId]
-#     location = @mirror.get_location(location_id)
+  content_type attachment.content_type
+  @mirror.download(attachment.content_url)
+end
 
-#     # Insert a new timeline card with the user's location.
-#     if settings.debug_mode
-#       @mirror.insert_timeline_item({
-#         text: "You are at " +
-#           "#{location.latitude} by #{location.longitude}." })
-#     end
-#   else
-#     puts "I don't know how to process this notification: " +
-#       "#{params[:collection]}"
-#   end
-#   return ""
-# end
 
-# ##
-# # A proxy that lets us access the data for attachments (because it requires
-# # authorization; we cannot just load the URL directly).
-# get '/attachment-proxy' do
-#   attachment = @mirror.get_timeline_attachment(
-#     params[:timeline_item_id], params[:attachment_id])
-
-#   content_type attachment.content_type
-#   @mirror.download(attachment.content_url)
-# end
-
-# get '/civomega/ask' do
-#   content_type :json
-#   if params[:question]
-#     response = answer_civomega_question(params[:question])
-#   else
-#     response = "Please specify a question and try again."
-#   end
-#   return response.to_json
-# end
-
-# get '/civomega/contact' do
-#   @mirror.insert_contact({
-#     id: 'civomega',
-#     displayName: 'CivOmega',
-#     acceptCommands: [
-#       {:type => "TAKE_A_NOTE"}
-#     ]
-#   })
-# end
+get '/civomega/ask' do
+  content_type :json
+  if params[:question]
+    response = answer_civomega_question(params[:question])
+  else
+    response = "Please specify a question and try again."
+  end
+  return response.to_json
+end

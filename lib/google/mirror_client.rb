@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-require_relative 'oauth_utils'
-
 ##
 # A small facade that simplifies making some basic Mirror API calls.
 #

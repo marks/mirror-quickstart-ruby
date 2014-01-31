@@ -55,11 +55,11 @@
       - if @contact.nil?
         %form(method="post" action="/insert-contact")
           %button.btn.btn-block.btn-success(type="submit")
-            Insert Ruby Quick Start Contact
+            = "Insert '#{settings.google_mirror["contact_name"]}' Contact"
       - else
         %form(method="post" action="/delete-contact")
           %button.btn.btn-block.btn-danger(type="submit")
-            Delete Ruby Quick Start Contact
+            = "Delete '#{settings.google_mirror["contact_name"]}' Contact"
 
   .span4
     %h2 Subscriptions

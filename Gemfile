@@ -19,3 +19,6 @@ end
 # for CivOmega functionality
 gem 'rest_client'
 gem 'nokogiri'
+
+gem 'active_support', :require => ['active_support/inflector']
+gem 'i18n'
