@@ -21,6 +21,8 @@ require './lib/google/mirror_client'
 require './lib/models'
 require './lib/civomega'
 
+$stdout.sync if settings.debug_mode# realtime logging, please!
+
 set :haml, { format: :html5 }
 enable :sessions
 
@@ -298,6 +300,10 @@ post '/notify-callback' do
     params[:userActions].each do |user_action|
       timeline_item_id = params[:itemId]
       timeline_item = @mirror.get_timeline_item(timeline_item_id)
+
+      puts "*** userAction payload => #{params.inspect}"
+      puts "*** user acted on => #{timeline_item.inspect}"
+
       if user_action[:type] == 'SHARE'
         caption = timeline_item.text || ''
 
@@ -308,7 +314,8 @@ post '/notify-callback' do
         # here.
         @mirror.patch_timeline_item(timeline_item_id,
           { text: "Ruby Quick Start got your photo! #{caption}" })
-      else# user_action[:type] == 'TAKE_A_NOTE'
+      elsif user_action[:type] == 'LAUNCH'
+
         question = timeline_item.text
         @mirror.patch_timeline_item(timeline_item_id, answer_civomega_question(question))
       end
