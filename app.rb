@@ -244,7 +244,7 @@ post '/insert-contact' do
     displayName: settings.google_mirror["contact_name"],
   })
 
-  session[:message] = "Inserted the '#{parameterize(settings.google_mirror["contact_name"])}' contact."
+  session[:message] = "Inserted the '#{parameterize(settings.google_mirror["contact_name"]}' contact."
   redirect to '/'
 end
 
