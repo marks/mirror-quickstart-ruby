@@ -57,9 +57,7 @@ end
 def store_credentials(user_id, credentials)
   c = Credentials.first(:user_id => user_id)
   if c
-    c.access_token = credentials.access_token
-    c.refresh_token = credentials.refresh_token
-    c.save!
+    c.update_attributes!(:access_token => credentials.access_token, :refresh_token => credentials.refresh_token)
   else
     Credentials.create!(:user_id => user_id, :access_token => credentials.access_token, :refresh_token => credentials.refresh_token)
   end
