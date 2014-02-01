@@ -287,24 +287,16 @@ end
 ##
 # Called by the Mirror API to notify us of events that we are subscribed to.
 post settings.google_mirror["subscription_route"] do
-  # The parameters for a subscription callback come as a JSON payload in
-  # the body of the request, so we just overwrite the empty params hash
-  # with those values instead.
-  params = @data#JSON.parse(request.body.read, symbolize_names: true)
-
-  # The callback needs to create its own client with the user token from
-  # the request.
   @mirror = MirrorClient.new(@client.authorization)#@client.discovered_api( "mirror", "v1" )
-  # @client = make_client(params[:userToken])
 
-  case params[:collection]
+  case @data[:collection]
   when 'timeline'
-    params[:userActions].each do |user_action|
-      timeline_item_id = params[:itemId]
+    @data[:userActions].each do |user_action|
+      timeline_item_id = @data[:itemId]
       timeline_item = @mirror.get_timeline_item(timeline_item_id)
 
-      puts "*** userAction payload => #{params.inspect}"
-      puts "*** user acted on => #{timeline_item.inspect}"
+      # puts "*** userAction payload => #{@data.inspect}"
+      # puts "*** user acted on => #{timeline_item.inspect}"
 
       if user_action[:type] == 'SHARE'
         caption = timeline_item.text || ''
@@ -315,16 +307,16 @@ post settings.google_mirror["subscription_route"] do
         # the original caption), but I wanted to illustrate the patch method
         # here.
         @mirror.patch_timeline_item(timeline_item_id,
-          { text: "Ruby Quick Start got your photo! #{caption}" })
+          { text: "Got your photo! #{caption}" })
       elsif timeline_item.recipients.map(&:id).include?(parameterize(settings.google_mirror["contact_name"]))
         question = timeline_item.text
-        @mirror.patch_timeline_item(timeline_item_id, answer_civomega_question(question))
+        @mirror.patch_timeline_item(timeline_item_id, GlasswareQuery::CivOmega.new.ask(question))
       else
-        @mirror.insert_timeline_item({text: "Ruby Quick Start got a timeline item it doesnt know what to do with...\n#{timeline_item.to_hash}" })
+        @mirror.insert_timeline_item({text: "Got a timeline item it doesnt know what to do with...\n#{timeline_item.to_hash}" })
       end
     end
   when 'locations'
-    location_id = params[:itemId]
+    location_id = @data[:itemId]
     location = @mirror.get_location(location_id)
 
     # Insert a new timeline card with the user's location.
@@ -335,7 +327,7 @@ post settings.google_mirror["subscription_route"] do
     end
   else
     puts "I don't know how to process this notification: " +
-      "#{params[:collection]}"
+      "#{@data[:collection]}"
   end
   return ""
 end
@@ -353,7 +345,7 @@ end
 
 get '/civomega/ask' do
   content_type :json
-  response = answer_civomega_question(params[:question])
+  response = GlasswareQuery::CivOmega.new.ask(params[:question])
   return response.to_json
 end
 
