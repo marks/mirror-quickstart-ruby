@@ -4,12 +4,12 @@ DataMapper::setup(:default, ENV["DATABASE_URL"] || "sqlite3://#{Dir.pwd}/db/dev.
 class GoogleUser
   include DataMapper::Resource
 
-  property :id, Serial
+  property :id, String, :key => true, :length => 50
   property :refresh_token, String, :length => 255
   property :access_token, String, :length => 255
   property :expires_in, Integer
   property :issued_at, Integer
-  property :phone_number, String, :length => 20
+  property :name, String, :length => 255
 
   def update_token!(object)
     self.refresh_token = object.refresh_token
