@@ -4,7 +4,7 @@ DataMapper::setup(:default, ENV["DATABASE_URL"] || "sqlite3://#{Dir.pwd}/db/dev.
 class GoogleUser
   include DataMapper::Resource
 
-  property :id, String, :key => true, :length => 50
+  property :token_id, String, :key => true, :length => 50
   property :refresh_token, String, :length => 255
   property :access_token, String, :length => 255
   property :expires_in, Integer

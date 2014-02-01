@@ -126,11 +126,11 @@ get "/oauth2callback" do
   token_pair = if token_pair
     GoogleUser.get(session[:token_id])
   else
-    GoogleUser.create(:id => @google_plus_info["id"], :name => @google_plus_info["displayName"])
+    GoogleUser.create(:token_id => @google_plus_info["id"].to_s, :name => @google_plus_info["displayName"])
   end
   token_pair.update_token!(@client.authorization)
   token_pair.save
-  session[:token_id] = token_pair.id
+  session[:token_id] = token_pair.token_id
   redirect to("/")
 end
 
@@ -202,34 +202,34 @@ end
 ##
 # Called when the button is clicked that inserts a timeline card into
 # all users' timelines.
-post '/insert-all-users' do
-  user_ids = list_stored_user_ids
-  if user_ids.length > 10
-    session[:message] =
-      "Found #{user_ids.length} users. Aborting to save your quota."
-  else
-    user_ids.each do |user_id|
-      user_client = make_client(user_id)
+# post '/insert-all-users' do
+#   user_ids = list_stored_user_ids
+#   if user_ids.length > 10
+#     session[:message] =
+#       "Found #{user_ids.length} users. Aborting to save your quota."
+#   else
+#     user_ids.each do |user_id|
+#       user_client = make_client(user_id)
 
-      user_client.insert_timeline_item({
-        text: "Did you know cats have 167 bones in their tails? Mee-wow!"
-      })
-    end
+#       user_client.insert_timeline_item({
+#         text: "Did you know cats have 167 bones in their tails? Mee-wow!"
+#       })
+#     end
 
-    session[:message] = "Sent a cat fact to #{user_ids.length} users."
-  end
+#     session[:message] = "Sent a cat fact to #{user_ids.length} users."
+#   end
 
-  redirect to '/'
-end
+#   redirect to '/'
+# end
 
-##
-# Called when the Delete button next to a timeline item is clicked.
-post '/delete-item' do
-  @mirror.delete_timeline_item(params[:id])
+# ##
+# # Called when the Delete button next to a timeline item is clicked.
+# post '/delete-item' do
+#   @mirror.delete_timeline_item(params[:id])
   
-  session[:message] = 'Deleted the timeline item.'
-  redirect to '/'
-end
+#   session[:message] = 'Deleted the timeline item.'
+#   redirect to '/'
+# end
 
 ##
 # Called when the button is clicked that inserts a new contact.
