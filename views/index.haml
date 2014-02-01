@@ -96,5 +96,5 @@
 -if settings.debug_mode
   .row
     .span12
-      %pre
-        = session.inspect
+      %pre= @google_plus_info.response.body
+      %pre= session.inspect

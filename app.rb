@@ -50,6 +50,8 @@ before do
 
   @mirror = MirrorClient.new(@client.authorization)#@client.discovered_api( "mirror", "v1" )
   @oauth2 = @client.discovered_api( "oauth2", "v2" )
+  @plus = @client.discovered_api( "plus", "v1" )
+
   @client.authorization.code = params[:code] if params[:code]
   
   #if we get a push from google, do a different lookup based on the userToken
@@ -86,6 +88,11 @@ end
 # Handles the index route.
 get '/' do
   @message = session.delete(:message)
+
+  @google_plus_info = @mirror.client.execute(
+    :api_method => @plus.people.get,
+    :parameters => {'collection' => 'public', 'userId' => 'me'}
+  )
 
   @timeline = @mirror.list_timeline(3)
 
@@ -361,4 +368,9 @@ get '/civomega/ask' do
     response = "Please specify a question and try again."
   end
   return response.to_json
+end
+
+get '/logout' do
+  session.clear
+  redirect to("/")
 end
