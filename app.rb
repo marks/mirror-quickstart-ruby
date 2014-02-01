@@ -21,6 +21,10 @@ configure :development do
   Log.level  = Logger::INFO 
 end
 
+configure :production do
+  Log = Logger.new(STDERR)
+end
+
 helpers do
   def base_url
     "#{request.env['rack.url_scheme']}://#{request.env['HTTP_HOST']}"
@@ -57,9 +61,8 @@ before do
   
   #if we get a push from google, do a different lookup based on the userToken
   if request.path_info == settings.google_mirror["subscription_route"]
-    @data = JSON.parse(request.body.read)
-    puts "*** " + @data.inspect
-    token_pair = GoogleUser.get(@data['userToken'])
+    @data = JSON.parse(request.body.read, symbolize_names: true)
+    token_pair = GoogleUser.get(@data[:userToken])
     @client.authorization.update_token!(token_pair.to_hash)
   else
     if GoogleUser.get(session[:token_id]) #if the user is logged in
@@ -203,7 +206,7 @@ end
 # Called when the button is clicked that inserts a timeline card into
 # all users' timelines.
 # post '/insert-all-users' do
-#   user_ids = list_stored_user_ids
+#   user_ids = GoogleUser.all.map(&:token_id)
 #   if user_ids.length > 10
 #     session[:message] =
 #       "Found #{user_ids.length} users. Aborting to save your quota."
@@ -224,12 +227,12 @@ end
 
 # ##
 # # Called when the Delete button next to a timeline item is clicked.
-# post '/delete-item' do
-#   @mirror.delete_timeline_item(params[:id])
+post '/delete-item' do
+  @mirror.delete_timeline_item(params[:id])
   
-#   session[:message] = 'Deleted the timeline item.'
-#   redirect to '/'
-# end
+  session[:message] = 'Deleted the timeline item.'
+  redirect to '/'
+end
 
 ##
 # Called when the button is clicked that inserts a new contact.
@@ -261,7 +264,7 @@ post '/insert-subscription' do
   
   begin
     @mirror.insert_subscription(
-      session[:user_id], params[:subscriptionId], callback)
+      session[:token_id], params[:subscriptionId], callback)
 
     session[:message] =
       "Subscribed to #{params[:subscriptionId]} notifications."
@@ -287,11 +290,12 @@ post settings.google_mirror["subscription_route"] do
   # The parameters for a subscription callback come as a JSON payload in
   # the body of the request, so we just overwrite the empty params hash
   # with those values instead.
-  params = JSON.parse(request.body.read, symbolize_names: true)
+  params = @data#JSON.parse(request.body.read, symbolize_names: true)
 
   # The callback needs to create its own client with the user token from
   # the request.
-  @client = make_client(params[:userToken])
+  @mirror = MirrorClient.new(@client.authorization)#@client.discovered_api( "mirror", "v1" )
+  # @client = make_client(params[:userToken])
 
   case params[:collection]
   when 'timeline'
@@ -312,7 +316,7 @@ post settings.google_mirror["subscription_route"] do
         # here.
         @mirror.patch_timeline_item(timeline_item_id,
           { text: "Ruby Quick Start got your photo! #{caption}" })
-      elsif timeline_item.recipients.map(&:id).include?(paramaterize(settings.google_mirror["contact_name"]))
+      elsif timeline_item.recipients.map(&:id).include?(parameterize(settings.google_mirror["contact_name"]))
         question = timeline_item.text
         @mirror.patch_timeline_item(timeline_item_id, answer_civomega_question(question))
       else
