@@ -35,7 +35,7 @@ class GlasswareQuery
         EOS
 
         selected_answers.each_with_index do |item,n|
-          response_text += "number {n+1}, #{item[0]}, #{item[1]} ,,"
+          response_text += "number #{n+1}, #{item[0]}, #{item[1]} ,,"
           response_html += "<tr><td>#{n+1}. #{item[0]}</td><td><div class='text-minor align-right muted'>#{item[1]}</div></td></tr>"
         end
 
@@ -52,7 +52,7 @@ class GlasswareQuery
 
         card_hash = {
           :html => response_html,
-          :speakableText => response_text,
+          :speakableText => response_text.gsub(")",",").gsub("(",",")
           :speakableType => "Open Data Question and Answer",
           :menuItems => [{ :action => 'OPEN_URI', :payload => "http://www.civomega.com/?q=#{question}"}, { :action => 'READ_ALOUD' }, { :action => 'DELETE' } ]
         }
