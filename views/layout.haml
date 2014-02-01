@@ -11,6 +11,10 @@
       .navbar-inner
         .container
           %a.brand(href="#") Glassware Starter Project: Ruby Edition
+          %ul.nav.pull-right
+            %li
+              %a{:href => "/logout"} Logout
+
     .container
       = yield
 

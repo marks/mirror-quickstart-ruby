@@ -359,7 +359,6 @@ get '/attachment-proxy' do
   @mirror.download(attachment.content_url)
 end
 
-
 get '/civomega/ask' do
   content_type :json
   if params[:question]
