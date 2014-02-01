@@ -353,11 +353,7 @@ end
 
 get '/civomega/ask' do
   content_type :json
-  if params[:question]
-    response = answer_civomega_question(params[:question])
-  else
-    response = "Please specify a question and try again."
-  end
+  response = answer_civomega_question(params[:question])
   return response.to_json
 end
 
