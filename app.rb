@@ -133,19 +133,6 @@ get "/oauth2callback" do
   redirect to("/")
 end
 
-post settings.google_mirror["subscription_route"] do
-  reply_result = @client.execute(
-    :api_method => @glass.timeline.get,
-    :parameters => {"id" => @data["itemId"]},
-    :authorization => @client.authorization)
-  reply = reply_result.data.text
-  msg_result = @client.execute(
-    :api_method => @glass.timeline.get,
-    :parameters => {"id" => reply_result.data.inReplyTo},
-    :authorization => @client.authorization)
-end
-
-
 ##
 # Called when one of the buttons is clicked that inserts an item into
 # the timeline.
