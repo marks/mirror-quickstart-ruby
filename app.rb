@@ -55,15 +55,15 @@ before do
   #if we get a push from google, do a different lookup based on the userToken
   if request.path_info == settings.google_mirror["subscription_route"]
     @data = JSON.parse(request.body.read)
-    token_pair = TokenPair.get(@data['userToken'])
+    token_pair = GoogleUser.get(@data['userToken'])
     @client.authorization.update_token!(token_pair.to_hash)
   else
     if session[:token_id] #if the user is logged in
-      token_pair = TokenPair.get(session[:token_id])
+      token_pair = GoogleUser.get(session[:token_id])
       @client.authorization.update_token!(token_pair.to_hash)
       @phone_number = token_pair.phone_number
     else #if we are receiving an SMS
-      token_pair = TokenPair.first(:phone_number => params[:To])
+      token_pair = GoogleUser.first(:phone_number => params[:To])
       if !token_pair.nil?
         @client.authorization.update_token!(token_pair.to_hash)
       end
@@ -116,9 +116,9 @@ end
 get "/oauth2callback" do
   @client.authorization.fetch_access_token!
   token_pair = if session[:token_id]
-    TokenPair.get(session[:token_id])
+    GoogleUser.get(session[:token_id])
   else
-    TokenPair.new
+    GoogleUser.new
   end
   token_pair.update_token!(@client.authorization)
   token_pair.save

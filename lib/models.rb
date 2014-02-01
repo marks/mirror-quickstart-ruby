@@ -1,7 +1,7 @@
 # Database stuff
 DataMapper::setup(:default, ENV["DATABASE_URL"] || "sqlite3://#{Dir.pwd}/db/dev.db")
 
-class TokenPair
+class GoogleUser
   include DataMapper::Resource
 
   property :id, Serial
