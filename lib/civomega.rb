@@ -27,7 +27,7 @@ def answer_civomega_question(question = "", n_answers = 3)
     EOS
 
     selected_answers.each_with_index do |item,n|
-      response_text += "#{n+1}, #{item[0]}, #{item[1]} ,,"
+      response_text += "number {n+1}, #{item[0]}, #{item[1]} ,,"
       response_html += "<tr><td>#{n+1}. #{item[0]}</td><td><div class='text-minor align-right muted'>#{item[1]}</div></td></tr>"
     end
 
