@@ -52,7 +52,7 @@ class GlasswareQuery
 
         card_hash = {
           :html => response_html,
-          :speakableText => response_text.gsub(")",",").gsub("(",",")
+          :speakableText => response_text.gsub(")",",").gsub("(",","),
           :speakableType => "Open Data Question and Answer",
           :menuItems => [{ :action => 'OPEN_URI', :payload => "http://www.civomega.com/?q=#{question}"}, { :action => 'READ_ALOUD' }, { :action => 'DELETE' } ]
         }
